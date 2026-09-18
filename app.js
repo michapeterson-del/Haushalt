@@ -189,6 +189,7 @@ function renderTable() {
 function renderAll() {
   setStatus();
   renderSummary();
+  renderTabs();
   renderTable();
 }
 renderAll();
