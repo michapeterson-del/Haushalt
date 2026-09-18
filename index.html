@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Punkteplan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+  :root{
+    color-scheme: light dark;
+    --bg:#faf6ef;
+    --surface:#ffffff;
+    --surface-2:#f3ece0;
+    --ink:#2b2822;
+    --ink-soft:#6b6355;
+    --line:#e6ddcc;
+    --line-strong:#d8cbb0;
+    --c-ben:#1f7a6c;
+    --c-sam:#b5601f;
+    --c-yoshi:#7a4f9e;
+    --good:#2f8f5b;
+    --warn:#c65b3a;
+    --sat-tint:#fbeede;
+    --shadow: 0 1px 2px rgba(43,40,34,.06), 0 6px 20px -10px rgba(43,40,34,.15);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#1b1712;
+      --surface:#252019;
+      --surface-2:#2e281f;
+      --ink:#f2ece0;
+      --ink-soft:#b3a891;
+      --line:#3c3428;
+      --line-strong:#4a4030;
+      --c-ben:#4fb8a4;
+      --c-sam:#e8a15a;
+      --c-yoshi:#b78fdb;
+      --good:#5cbf8a;
+      --warn:#e08064;
+      --sat-tint:#33291a;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+    }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0; background:var(--bg); color:var(--ink);}
+  body{
+    font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+    font-variant-numeric: tabular-nums;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  img{max-width:100%}
+  [hidden]{display:none !important}
+  .page{
+    max-width:840px;
+    margin:0 auto;
+    padding: 28px 16px 56px;
+    display:flex;
+    flex-direction:column;
+    gap:28px;
+  }
+  h1,h2{ font-family:Fraunces,Georgia,serif; margin:0; text-wrap:balance; }
+  .top{ display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
+  .top h1{font-size:1.7rem; font-weight:600;}
+  .week-range{margin:.25rem 0 0; color:var(--ink-soft); font-size:.92rem;}
+  .status{
+    display:inline-flex; align-items:center; gap:.4em;
+    font-size:.78rem; font-weight:600;
+    padding:.35em .7em; border-radius:999px;
+    background:var(--surface-2); color:var(--ink-soft); white-space:nowrap;
+  }
+  .status .dot{width:7px;height:7px;border-radius:50%;background:var(--ink-soft);flex:none;}
+  .status.live{color:var(--good);}
+  .status.live .dot{background:var(--good);}
+  .status.readonly{color:var(--warn);}
+  .status.readonly .dot{background:var(--warn);}
+
+  .banner{
+    background:var(--surface-2);
+    border:1px solid var(--line-strong);
+    border-radius:12px;
+    padding:10px 14px;
+    font-size:.82rem;
+    color:var(--ink-soft);
+  }
+
+  .summary{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  @media (max-width:560px){ .summary{grid-template-columns:1fr;} }
+  .p-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:16px;
+    padding:16px; box-shadow:var(--shadow); border-top:3px solid var(--card-c);
+  }
+  .p-card .name{font-family:Fraunces,serif; font-weight:600; font-size:1.05rem; color:var(--card-c);}
+  .p-card .minutes{font-size:2.1rem; font-weight:700; line-height:1.1; margin-top:.25rem;}
+  .p-card .minutes small{font-size:.95rem; font-weight:500; color:var(--ink-soft);}
+  .bar{height:7px; border-radius:999px; background:var(--surface-2); margin-top:.7rem; overflow:hidden;}
+  .bar > span{display:block; height:100%; background:var(--card-c); border-radius:999px; transition:width .3s ease;}
+  .p-card .of-max{margin-top:.4rem; font-size:.75rem; color:var(--ink-soft);}
+
+  .board{ background:var(--surface); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); overflow:hidden; }
+  .tabs{ display:flex; border-bottom:1px solid var(--line); }
+  .tab{
+    flex:1; padding:12px 10px; text-align:center; background:none; border:none; font:inherit;
+    font-weight:600; font-size:.92rem; color:var(--ink-soft); cursor:pointer;
+    border-bottom:3px solid transparent; margin-bottom:-1px;
+  }
+  .tab:hover{color:var(--ink);}
+  .tab.active{color:var(--tab-c); border-bottom-color:var(--tab-c);}
+  .tab:focus-visible{outline:2px solid var(--tab-c); outline-offset:-2px;}
+
+  .tablewrap{overflow-x:auto; padding:14px;}
+  table.grid{border-collapse:collapse; width:100%; min-width:520px;}
+  table.grid th, table.grid td{padding:6px 8px; text-align:center; vertical-align:middle;}
+  table.grid thead th{
+    font-size:.72rem; font-weight:600; color:var(--ink-soft);
+    text-transform:uppercase; letter-spacing:.04em;
+    border-bottom:1px solid var(--line); padding-bottom:8px;
+  }
+  table.grid thead th .datenum{display:block; font-size:.68rem; font-weight:500; text-transform:none; letter-spacing:0; margin-top:1px;}
+  table.grid thead th.sat{background:var(--sat-tint); border-radius:8px 8px 0 0;}
+  table.grid tbody td.sat{background:var(--sat-tint);}
+  table.grid tbody tr:not(:last-child) td{border-bottom:1px solid var(--line);}
+  table.grid th.taskcol{
+    text-align:left; white-space:nowrap; font-weight:500; color:var(--ink);
+    display:flex; align-items:center; gap:.5em; padding-top:9px;
+  }
+  table.grid th.taskcol svg{color:var(--ink-soft); flex:none;}
+  .pts{
+    font-size:.68rem; font-weight:600; color:var(--ink-soft);
+    background:var(--surface-2); border-radius:999px; padding:.1em .5em; margin-left:.15em;
+  }
+  tfoot td{padding-top:10px; font-size:.72rem; color:var(--ink-soft); font-weight:600; border-top:1px solid var(--line-strong);}
+  tfoot td.taskcol{text-align:left;}
+
+  .cb{
+    appearance:none; -webkit-appearance:none;
+    width:28px; height:28px; border-radius:8px;
+    border:1.5px solid var(--line-strong); background:var(--surface);
+    display:inline-flex; align-items:center; justify-content:center; cursor:pointer; padding:0;
+  }
+  .cb:hover{border-color:var(--tab-c);}
+  .cb:focus-visible{outline:2px solid var(--tab-c); outline-offset:2px;}
+  .cb[aria-checked="true"]{background:var(--tab-c); border-color:var(--tab-c);}
+  .cb svg{width:16px; height:16px; color:#fff; opacity:0; transform:scale(.6);}
+  .cb[aria-checked="true"] svg{opacity:1; transform:scale(1);}
+  .cb, .cb svg{transition:all .12s ease;}
+  @media (prefers-reduced-motion: reduce){ .cb, .cb svg, .bar > span{transition:none;} }
+  .cb[disabled]{cursor:not-allowed; opacity:.5;}
+
+  .history h2{font-size:1.05rem; font-weight:600; margin-bottom:10px;}
+  .history-list{display:flex; flex-direction:column; gap:8px;}
+  .h-row{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:var(--surface); border:1px solid var(--line); border-radius:12px;
+    padding:10px 14px; font-size:.85rem; flex-wrap:wrap;
+  }
+  .h-row .h-range{color:var(--ink-soft); flex:1; min-width:140px;}
+  .h-scores{display:flex; gap:14px;}
+  .h-score{display:flex; align-items:center; gap:.4em; font-weight:600;}
+  .h-score .swatch{width:8px; height:8px; border-radius:50%;}
+  .h-empty{color:var(--ink-soft); font-size:.88rem; padding:6px 2px;}
+
+  .foot{color:var(--ink-soft); font-size:.78rem; text-align:center;}
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="top">
+    <div class="titleblock">
+      <h1>Punkteplan</h1>
+      <p class="week-range" id="weekRange">Woche wird geladen …</p>
+    </div>
+    <span class="status" id="statusBadge"><span class="dot"></span><span class="statustext">Verbinde …</span></span>
+  </header>
+
+  <div class="banner" id="setupBanner" hidden>
+    Die gemeinsame Datenbank ist noch nicht eingerichtet — Häkchen werden vorerst nur auf diesem Gerät gespeichert.
+  </div>
+
+  <section class="summary" id="summaryCards"></section>
+
+  <section class="board">
+    <div class="tabs" id="tabs"></div>
+    <div class="tablewrap" id="tableWrap"></div>
+  </section>
+
+  <section class="history">
+    <h2>Vorherige Wochen</h2>
+    <div id="historyList" class="history-list"><p class="h-empty">Lade Verlauf …</p></div>
+  </section>
+
+  <p class="foot">1 Punkt = 1 Minute YouTube · Auswertung samstags · der Link zeigt immer den aktuellen Stand</p>
+</div>
+
+<!-- Firebase config: fill in with your own free Firebase project (see README.md) to enable
+     live sync across every device. Until filled in, the app falls back to this browser only. -->
+<script>
+  window.FIREBASE_CONFIG = null;
+  /* Example once you have your project:
+  window.FIREBASE_CONFIG = {
+    apiKey: "AIza...",
+    authDomain: "your-project.firebaseapp.com",
+    projectId: "your-project",
+    storageBucket: "your-project.appspot.com",
+    messagingSenderId: "...",
+    appId: "..."
+  };
+  */
+</script>
+<script type="module" src="./app.js"></script>
+</body>
+</html>
